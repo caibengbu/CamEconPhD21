@@ -191,7 +191,7 @@ function moments(a, b, r, τ, η, χ, β, z̄, σ_z, α, A)
     effective_labor, employment, labor_std = aggregate_label_supply_quad_approx(w, a, b, r, τ, T, η, χ, β, z̄, σ_z)
     unemp = 1 - employment
 
-    M0 = effective_labor
+    M0 = effective_labor / employment
     M1 = unemp
     M2 = unemp * b / (effective_labor * w)
     M3 = labor_std / effective_labor
