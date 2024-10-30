@@ -1,0 +1,1 @@
+params = ExoParams(); % Exogeneous parameters for aiyagari

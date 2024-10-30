@@ -247,7 +247,7 @@ function figure_IIa_aiyagari(params)
     a_grid = get_a_grid(params)
     z_stationary_distribution = stationary_distribution(P)
     L = z_stationary_distribution'z_grid
-    r_grid = 0:0.001:0.08
+    r_grid = 0.41
     capital_demand_supply = @showprogress map(r_grid) do r
         K = ((r + δ)/(α * A))^(1/(α-1)) * L
         w = A*(1-α)*(A*α/(r + δ))^(α/(1-α))
@@ -268,6 +268,7 @@ function figure_IIa_aiyagari(params)
         az_stationary_distribution = reshape(az_stationary_distribution, Na, Nz)
         a_stationary_distribution = sum(az_stationary_distribution, dims=2)
         Ea = a_stationary_distribution' * a_grid
+        @infiltrate
         return K, Ea[1]
     end
     K_vec = [x[1] for x in capital_demand_supply]
@@ -279,9 +280,42 @@ function figure_IIa_aiyagari(params)
 end
 
 aiyagari_params = ExoParams(β=0.96, δ=0.05, α=0.36, A=1.0, σ=0.2, ρ=0.9, Nz=7, Na=200, a̲=0.0, a̅=50.0, m=3.0)
-# r_tmp, a_stationary_distribution, z_stationary_distribution, v_res, policy_res = naive_solver(aiyagari_params)
-# a_stationary_distribution2 = equalize_a_grid_dist(aiyagari_params, a_stationary_distribution, 100)
+r_tmp, a_stationary_distribution, z_stationary_distribution, v_res, policy_res = naive_solver(aiyagari_params)
+# a_stationary_distribution2 = equalize_a_grid_dist(aiyagari_params, a_stationary_distribution, 50)
 # bar(a_stationary_distribution2, title="Stationary Distribution of Assets", xlabel="Wealth", ylabel="Density")
 
 # reproduce aiyagari figures
-figure_IIa_aiyagari(aiyagari_params)
+# figure_IIa_aiyagari(aiyagari_params)
+
+function martingale(T, N)
+    increments = randn(T, N)
+    cumsum(increments, dims=1)
+end
+
+function submartingale(T, N)
+    increments = max.(randn(T, N),-1.0)
+    cumsum(increments, dims=1)
+end
+
+function supermartingale(T, N)
+    increments = min.(randn(T, N),1.0)
+    cumsum(increments, dims=1)
+end
+
+function bounded_below_supermartingale(T, N)
+    increments = min.(randn(T, N),1.0)
+    paths = zeros(T, N)
+    for t in 1:T
+        if t == 1
+            paths[t,:] = increments[t,:]
+        else
+            paths[t,:] = max.(paths[t-1,:] .+ increments[t,:], -10.0)
+        end
+    end
+    paths
+end
+
+plot(martingale(1000, 100), legend=false, title="Martingale")
+plot(submartingale(1000, 100), legend=false, title="Submartingale")
+plot(supermartingale(1000, 100), legend=false, title="Supermartingale")
+plot(bounded_below_supermartingale(1000, 100), legend=false, title="Bounded Below Supermartingale")
